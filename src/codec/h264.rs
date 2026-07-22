@@ -197,21 +197,15 @@ impl H264Decoder {
             let h = height as usize;
             let h2 = (height as usize).div_ceil(2); // seguridad si altura impar
 
-            let y_stride = if h > 0 {
-                y_plane.len() / h
-            } else {
-                width as usize
-            };
-            let u_stride = if h2 > 0 {
-                u_plane.len() / h2
-            } else {
-                (width as usize).div_ceil(2)
-            };
-            let v_stride = if h2 > 0 {
-                v_plane.len() / h2
-            } else {
-                (width as usize).div_ceil(2)
-            };
+            let y_stride = y_plane.len().checked_div(h).unwrap_or(width as usize);
+            let u_stride = u_plane
+                .len()
+                .checked_div(h2)
+                .unwrap_or((width as usize).div_ceil(2));
+            let v_stride = v_plane
+                .len()
+                .checked_div(h2)
+                .unwrap_or((width as usize).div_ceil(2));
 
             let needed = width as usize * height as usize * 3;
             if self.rgb_buffer.len() != needed {

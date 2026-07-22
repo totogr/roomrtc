@@ -509,15 +509,13 @@ pub fn decode_compound(buf: &[u8]) -> Vec<RtcpPacket> {
                     out.push(RtcpPacket::BYE(Bye { ssrcs, reason }));
                 }
 
-                PT_PSFB => {
-                    if hdr.count == FMT_PLI && body.len() >= 8 {
-                        let sender_ssrc = u32::from_be_bytes([body[0], body[1], body[2], body[3]]);
-                        let media_ssrc = u32::from_be_bytes([body[4], body[5], body[6], body[7]]);
-                        out.push(RtcpPacket::PLI(PictureLossIndication {
-                            sender_ssrc,
-                            media_ssrc,
-                        }));
-                    }
+                PT_PSFB if hdr.count == FMT_PLI && body.len() >= 8 => {
+                    let sender_ssrc = u32::from_be_bytes([body[0], body[1], body[2], body[3]]);
+                    let media_ssrc = u32::from_be_bytes([body[4], body[5], body[6], body[7]]);
+                    out.push(RtcpPacket::PLI(PictureLossIndication {
+                        sender_ssrc,
+                        media_ssrc,
+                    }));
                 }
                 _ => {}
             }

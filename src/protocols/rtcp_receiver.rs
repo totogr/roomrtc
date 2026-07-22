@@ -76,11 +76,11 @@ impl RtcpRecvState {
         self.expected_prior = expected;
         self.received_prior = self.received;
         let lost_interval = expected_interval.saturating_sub(received_interval);
-        let fraction_lost = if expected_interval > 0 {
-            ((lost_interval.saturating_mul(256)) / expected_interval).min(255) as u8
-        } else {
-            0
-        };
+        let fraction_lost = lost_interval
+            .saturating_mul(256)
+            .checked_div(expected_interval)
+            .map(|v| v.min(255) as u8)
+            .unwrap_or(0);
         let cumulative_lost = expected.saturating_sub(self.received);
         let jitter_u32 = self.jitter.round() as u32;
         // LSR/DLSR
