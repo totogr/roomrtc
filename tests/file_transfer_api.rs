@@ -99,7 +99,7 @@ fn test_metadata_invalid_utf8() {
 
 #[test]
 fn test_large_file_chunking() {
-    let temp_path = PathBuf::from("/tmp/test_large_file.bin");
+    let temp_path = std::env::temp_dir().join("roomrtc_test_large_file.bin");
     let test_data = vec![0xAB; 100_000]; // 100KB
 
     {
@@ -191,7 +191,7 @@ fn test_performance_serialization() {
 
 #[test]
 fn test_metadata_roundtrip_with_real_file() {
-    let temp_path = PathBuf::from("/tmp/test_metadata_roundtrip.txt");
+    let temp_path = std::env::temp_dir().join("test_metadata_roundtrip.txt");
     let content = b"Testing metadata roundtrip.";
 
     fs::write(&temp_path, content).expect("Failed to write temp file");
@@ -218,7 +218,7 @@ fn test_metadata_roundtrip_with_real_file() {
 
 #[test]
 fn test_empty_file_metadata() {
-    let temp_path = PathBuf::from("/tmp/test_empty.txt");
+    let temp_path = std::env::temp_dir().join("test_empty.txt");
     fs::write(&temp_path, b"").expect("Failed to write empty file");
 
     let metadata = FileMetadata::from_file(&temp_path, &[]).expect("Failed to create metadata");

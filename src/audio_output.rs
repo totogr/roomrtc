@@ -114,10 +114,15 @@ impl AudioOutput {
     }
 
     /// Crear una salida dummy para pruebas (descarta audio)
-    pub fn dummy() -> Self {
+    pub fn dummy() -> Result<Self, String> {
         let host = cpal::default_host();
-        let device = host.default_output_device().unwrap();
-        let config = device.default_output_config().unwrap().config();
+        let device = host
+            .default_output_device()
+            .ok_or("No hay dispositivo de salida de audio disponible")?;
+        let config = device
+            .default_output_config()
+            .map_err(|e| format!("Fallo al obtener la configuracion de salida: {}", e))?
+            .config();
 
         // Crear un stream no-op que descarta audio
         let stream = device
@@ -129,15 +134,15 @@ impl AudioOutput {
                 |_err| {},
                 None,
             )
-            .unwrap();
+            .map_err(|e| format!("Fallo al construir el stream de salida: {}", e))?;
 
-        Self {
+        Ok(Self {
             _device: device,
             _stream: stream,
             buffer: Arc::new(Mutex::new(VecDeque::new())),
             sample_rate: 48000,
             prebuffer_samples: 0,
-        }
+        })
     }
 }
 
@@ -282,11 +287,18 @@ mod tests {
 
     #[test]
     fn test_dummy_output() {
-        let mut output = AudioOutput::dummy();
-        assert_eq!(output.sample_rate(), 48000);
+        // Puede fallar en entornos sin dispositivo de audio (p. ej. CI headless)
+        match AudioOutput::dummy() {
+            Ok(mut output) => {
+                assert_eq!(output.sample_rate(), 48000);
 
-        let samples = vec![1000i16; 960];
-        let result = output.play_samples(&samples);
-        assert!(result.is_ok());
+                let samples = vec![1000i16; 960];
+                let result = output.play_samples(&samples);
+                assert!(result.is_ok());
+            }
+            Err(e) => {
+                println!("Skipping test - no audio output available: {}", e);
+            }
+        }
     }
 }
